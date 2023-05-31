@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, TextInput, ImageBackground, Keyboard, TouchableWithoutFeedback  } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 
 const bgimg = { uri: 'https://i.pinimg.com/564x/ad/34/34/ad34346ab249e362341b4d553fe89e3a.jpg' };
@@ -23,6 +24,7 @@ const Index = () => {
     const dataSignin = {
       email: emailRef.current,
       password: passwordRef.current,
+      
     };
     console.log(dataSignin)
 
@@ -31,6 +33,7 @@ const Index = () => {
       .then((res) => {
        AsyncStorage.setItem('token', res.data.token);
        AsyncStorage.setItem('user', JSON.stringify(res.data.user))
+       navigation.navigate('Home');
        console.log('Token:', res.data.token);
        console.log('User:', res.data.user)
       })
@@ -47,10 +50,15 @@ const Index = () => {
       return () => {
         Keyboard.removeListener('keyboardDidHide', dismissKeyboard);
       };
-
-
-
   };
+
+  const navigation = useNavigation();
+
+      const handleRegisterClick = () => {
+        navigation.navigate('Register');
+      };
+      
+      
   return (
    
 
@@ -82,7 +90,7 @@ const Index = () => {
 
         
       </View>
-      <Text className='text-white text-[18px] tracking-[4px] font-semibold ' >Don't have an account?</Text><Text className='text-white font-bold bg-[#f927d6] w-40 h-10 text-center pt-3'> REGISTER NOW</Text>
+      <Text className='text-white text-[18px] tracking-[4px] font-semibold ' >Don't have an account?</Text><Text onPress={handleRegisterClick} className='text-white font-bold bg-[#f927d6] w-40 h-10 text-center pt-3'> REGISTER NOW</Text>
       <Text className='text-[#d1d0d0] font-semibold  tracking-[8px] pb-2 ' > -By Joaquin Dimaro-</Text>
       </ImageBackground>
       </TouchableWithoutFeedback>
