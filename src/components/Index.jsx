@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, TextInput, ImageBackground, Keyboard, TouchableWithoutFeedback  } from 'react-native';
+import { View, Text, TextInput, ImageBackground, Keyboard, TouchableWithoutFeedback, Alert  } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,7 @@ const bgimg = { uri: 'https://i.pinimg.com/564x/ad/34/34/ad34346ab249e362341b4d5
 const Index = () => {
   const [emailValue, setEmailValue] = useState('');
   const [passwordValue, setPasswordValue] = useState('');
+  
 
 
   let emailRef = useRef();
@@ -33,12 +34,16 @@ const Index = () => {
       .then((res) => {
        AsyncStorage.setItem('token', res.data.token);
        AsyncStorage.setItem('user', JSON.stringify(res.data.user))
+       Alert.alert('Welcome', 'You are logged in! ');
        navigation.navigate('Home');
+       setEmailValue('');
+       setPasswordValue('');
        console.log('Token:', res.data.token);
        console.log('User:', res.data.user)
       })
       .catch((err) => {
-        console.error(err);
+        let error = err.response.data.message; 
+        Alert.alert('Sorry', `${error}`);
       });
 
       const dismissKeyboard = () => {
