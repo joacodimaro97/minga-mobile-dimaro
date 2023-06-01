@@ -4,12 +4,14 @@ import Index from './src/components/Index';
 import Register from './src/components/Register'
 import Home from './src/components/Home';
 import Mangas from './src/components/Mangas';
+import MangaDetail from './src/components/MangaDetail';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
   const Stack = createStackNavigator();
  
+  
 
   return (
 
@@ -38,6 +40,11 @@ export default function App() {
             <Stack.Screen
               name="Mangas"
               component={Mangas}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Detail"
+              component={MangaDetail}
               options={{ headerShown: false }}
             />
           
