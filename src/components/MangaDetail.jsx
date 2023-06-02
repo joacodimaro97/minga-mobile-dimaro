@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, Image, ImageBackground } from 'react-native';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 
 const bgimg = {uri : 'https://i.pinimg.com/564x/e8/bd/14/e8bd14d9593b74d89deddadfac0d44fe.jpg'}
@@ -35,6 +36,18 @@ const MangaDetail = ({ route }) => {
   }, [route]);
 
   // Renderizar los datos del manga específico
+
+
+  const navigation = useNavigation();
+
+  const handleHome = () => {
+    navigation.navigate('Home');
+  };
+  
+  const handleManga = () => {
+    navigation.navigate('Mangas');
+  };
+
   return (
 
   
@@ -49,8 +62,8 @@ const MangaDetail = ({ route }) => {
         </>
       )}
       <View className="flex flex-row justify-around items-center h-[8vh] w-full bg-[#000] " >
-        <Text className="text-white  font-bold text-[30px]" >Home</Text>
-        <Text className="text-white  font-bold text-[30px]" >Mangas</Text>
+        <Text onPress={handleHome} className="text-white  font-bold text-[30px]" >Home</Text>
+        <Text onPress={handleManga} className="text-white  font-bold text-[30px]" >Mangas</Text>
       </View>
     </ImageBackground>
   );
