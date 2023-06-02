@@ -1,29 +1,32 @@
-import React, { useEffect, useState, useParams } from 'react';
-import { View, Text,ImageBackground, TextInput, Image, ScrollView, TouchableOpacity  } from 'react-native'
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ImageBackground, TextInput, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Card from './Card'
+import Card from './Card';
 import { useNavigation } from '@react-navigation/native';
 
+const bgimg = { uri: 'https://i.pinimg.com/564x/c1/33/5b/c1335b615daca8198484062a9f769a24.jpg' };
 
-const bgimg = { uri: 'https://i.pinimg.com/564x/c1/33/5b/c1335b615daca8198484062a9f769a24.jpg'}
+const Mangas = () => {
+  const [mangas, setMangas] = useState([]);
+  const [filterManga, setFilterManga] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
 
+  const handleSearch = (text) => {
+    const searchText = text.toLowerCase();
+    const filteredManga = mangas.filter((manga) =>
+      manga.title.toLowerCase().includes(searchText)
+    );
+    setFilterManga(filteredManga);
+  };
 
- const Mangas = () => {
- 
-const [mangas, setMangas] = useState([]);
-const [filterManga, setFilterManga] = useState ([])
-
-const handleSearch = (text) => {
-  const searchText = text.toLowerCase();
-  const filterManga = mangas.filter((manga) =>
-    manga.title.toLowerCase().includes(searchText)
-  );
-  setFilterManga(filterManga);
-};
-
-
-
+  const loadMoreMangas = useCallback(() => {
+    if (!isLoading) {
+      setIsLoading(true);
+      setPage((prevPage) => prevPage + 1);
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     const getToken = async () => {
@@ -33,15 +36,16 @@ const handleSearch = (text) => {
           const headers = {
             headers: { 'Authorization': `Bearer ${token}` }
           };
-          console.log(headers)
-          axios.get('https://minga-mobile-back.onrender.com/api/mangas', headers)
+          axios.get(`https://minga-mobile-back.onrender.com/api/mangas?page=${page}`, headers)
             .then(response => {
-              setMangas(response.data.response);
-              setFilterManga(response.data.response)
-              
+              const newMangas = response.data.response;
+              setMangas(prevMangas => [...prevMangas, ...newMangas]);
+              setFilterManga(prevMangas => [...prevMangas, ...newMangas]);
+              setIsLoading(false);
             })
             .catch(error => {
               console.error(error);
+              setIsLoading(false);
             });
         } else {
           // Manejar caso cuando no hay token en AsyncStorage
@@ -50,41 +54,67 @@ const handleSearch = (text) => {
         console.error(error);
       }
     };
-  
-    getToken();
-  }, []);
 
-  console.log(filterManga)
+    getToken();
+  }, [page]);
+
   const navigation = useNavigation();
 
-      const handleHome = () => {
-        navigation.navigate('Home');
-      };
-      const handleDetail = () => {
-        navigation.navigate('Detail');
-      }
-  
-  return (
-   <ImageBackground source={bgimg} className='w-screen h-screen flex justify-between items-center ' resizeMode='cover' >
-    
-        <Text className='text-white  font-bold text-[30px] py-4'>MANGAS</Text>
-        <TextInput className="text-black w-[70vw] rounded-md h-[8vh] bg-[#fbfbfbc3] p-2 text-[20px] " onChangeText={(e)=>handleSearch(e)} placeholder="Search.... 🔎"
-        placeholderTextColor="black" ></TextInput>
-        <View className='w-full h-[80vh] flex justify-between' >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-      
-        <View className=' h-[90%] p-20 flex flex-col justify-evenly items-center ' >
-        <TouchableOpacity onPress={handleDetail} >
-        <Card filterManga={filterManga} />
-        </TouchableOpacity>
-        </View>
-        </ScrollView>
-        <View className='bg-black fixed w-full h-[10%] flex justify-center items-center' ><Text onPress={handleHome} className='text-white  font-bold text-[30px] ' >Go back to HOME</Text></View>
-        </View>
-    </ImageBackground>
-  )
-}
+  const handleHome = () => {
+    navigation.navigate('Home');
+  };
 
-export default Mangas
+  const handleDetail = (mangaId) => {
+    navigation.navigate('Detail', { mangaId });
+  };
+  const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
+    const paddingToBottom = 20; // Puedes ajustar este valor según tus necesidades
+    return layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+  };
+  
+
+  return (
+    <ImageBackground source={bgimg} className='flex justify-between items-center' style={{ flex: 1 }} resizeMode='cover'>
+  <Text className='text-white font-bold text-[30px] py-4'>MANGAS</Text>
+  <TextInput
+    className='text-black w-[70vw] rounded-md h-[8vh] bg-[#fbfbfbc3] p-2 text-20'
+    onChangeText={(text) => handleSearch(text)}
+    placeholder="Search.... 🔎"
+    placeholderTextColor="black"
+  />
+  <View className='w-full h-[80vh] flex border border-white ' >
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      onScroll={({ nativeEvent }) => {
+        if (isCloseToBottom(nativeEvent)) {
+          loadMoreMangas();
+        }
+      }}
+      scrollEventThrottle={400}
+    >
+      <View className='h-[90vh] p-20 flex flex-col justify-evenly items-center' style={{ height: '90%', padding: 20 }}>
+        {filterManga.map((manga, index) => (
+          <TouchableOpacity key={index} onPress={() => handleDetail(manga._id)}>
+            <Card manga={manga} />
+          </TouchableOpacity>
+        ))}
+        {isLoading && (
+          <View style={{ marginTop: 20 }}>
+            <ActivityIndicator size="large" color="white" />
+          </View>
+        )}
+      </View>
+    </ScrollView>
+    <View className='bg-black fixed w-full h-[10vh] flex justify-center items-center'>
+      <Text onPress={handleHome} className='text-white font-bold text-[30px]'>
+        Go back to HOME
+      </Text>
+    </View>
+  </View>
+</ImageBackground>
+    );
+  };
+  
+  export default Mangas;
 
 
